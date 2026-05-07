@@ -15,6 +15,10 @@ const facturaRoutes = require('./routes/facturaRoutes');
 const gastoRoutes = require('./routes/gastoRoutes');
 const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
 const viajeRoutes = require('./routes/viajeRoutes');
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://admin-cars.vercel.app' // Tu nueva URL de Vercel
+];
 
 const app = express();
 
