@@ -15,6 +15,7 @@ const facturaRoutes = require('./routes/facturaRoutes');
 const gastoRoutes = require('./routes/gastoRoutes');
 const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
 const viajeRoutes = require('./routes/viajeRoutes');
+const liquidacionRoutes = require('./routes/liquidacionRoutes');
 const allowedOrigins = [
   'http://localhost:5173',
   'https://admin-cars.vercel.app' // Tu nueva URL de Vercel
@@ -23,7 +24,11 @@ const allowedOrigins = [
 const app = express();
 
 app.use(helmet());
-app.use(require('cors')());
+app.use(require('cors')({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -34,6 +39,7 @@ app.use('/api/v1', facturaRoutes);
 app.use('/api/v1', gastoRoutes);
 app.use('/api/v1', mantenimientoRoutes);
 app.use('/api/v1', viajeRoutes);
+app.use('/api/v1', liquidacionRoutes);
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api', healthRoutes);

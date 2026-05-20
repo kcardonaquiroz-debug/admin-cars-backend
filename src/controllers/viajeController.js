@@ -2,7 +2,23 @@ const viajeService = require("../services/viajeService");
 
 const getViajes = async (req, res) => {
     try {
-        const data = await viajeService.obtenerViajes();
+        const usuario = req.user;
+        let data;
+        if (usuario.rol === 'Conductor') {
+            data = await viajeService.obtenerViajesPorConductor(usuario.id);
+        } else {
+            data = await viajeService.obtenerViajes();
+        }
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getViaje = async (req, res) => {
+    try {
+        const data = await viajeService.obtenerViajePorId(req.params.id);
+        if (!data) return res.status(404).json({ error: 'Viaje no encontrado' });
         res.json({ success: true, data });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -36,4 +52,4 @@ const deleteViaje = async (req, res) => {
     }
 };
 
-module.exports = { getViajes, postViaje, putViaje, deleteViaje };
+module.exports = { getViajes, getViaje, postViaje, putViaje, deleteViaje };

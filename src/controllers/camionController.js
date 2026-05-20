@@ -9,6 +9,18 @@ const getCamiones = async (req, res) => {
     }
 };
 
+const getResumenCamion = async (req, res) => {
+    try {
+        const { fecha_inicio, fecha_fin } = req.query;
+        const inicio = fecha_inicio || '2020-01-01';
+        const fin = fecha_fin || new Date().toISOString().slice(0, 10);
+        const data = await camionService.obtenerResumenCamion(req.params.id, inicio, fin);
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const postCamion = async (req, res) => {
     try {
         const result = await camionService.crearCamion(req.body);
@@ -36,4 +48,4 @@ const deleteCamion = async (req, res) => {
     }
 };
 
-module.exports = { getCamiones, postCamion, putCamion, deleteCamion };
+module.exports = { getCamiones, getResumenCamion, postCamion, putCamion, deleteCamion };

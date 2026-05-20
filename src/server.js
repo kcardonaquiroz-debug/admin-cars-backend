@@ -6,7 +6,7 @@ const pool = require('./config/db');
 const PORT = process.env.PORT || 4000;
 
 const server = app.listen(PORT, () => {
-    console.log(` Servidor corriendo en http://localhost:${PORT}`);
+    console.log(` Servidor corriendo en:${PORT}`);
 });
 
 process.on('SIGINT', async () => {
