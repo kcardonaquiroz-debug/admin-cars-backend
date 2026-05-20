@@ -3,11 +3,12 @@ const jwt = require('jsonwebtoken');
 const verificarToken = (req, res, next) => {
     let token = req.headers.authorization;
 
-    // ✅ Corregido a "startsWith" con 's' para que JavaScript lo reconozca
-    if (!token || !token.startsWith('Bearer')){
-        return res.status(401).json({ success: false, error: 'Acceso denegado. Token no proporcionado'});
+    // 🛡️ Validación robusta: verifica que exista, que sea texto y que empiece con 'Bearer'
+    if (!token || typeof token !== 'string' || !token.startsWith('Bearer')) {
+        return res.status(401).json({ success: false, error: 'Acceso denegado. Token no proporcionado o inválido' });
     }
 
+    // Extraemos el token puro del string
     token = token.split(' ')[1];
 
     try {
@@ -15,7 +16,7 @@ const verificarToken = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        return res.status(403).json({ success: false, error: 'Token invalido o expirado.'});
+        return res.status(403).json({ success: false, error: 'Token invalido o expirado.' });
     }
 };
 
