@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 
 const verificarToken = (req, res, next) => {
-    let token = req. headers.authorization;
+    let token = req.headers.authorization;
 
-    if (!token || !token.startWith('Bearer')){
+    // ✅ Corregido a "startsWith" con 's' para que JavaScript lo reconozca
+    if (!token || !token.startsWith('Bearer')){
         return res.status(401).json({ success: false, error: 'Acceso denegado. Token no proporcionado'});
     }
 
