@@ -16,19 +16,28 @@ const gastoRoutes = require('./routes/gastoRoutes');
 const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
 const viajeRoutes = require('./routes/viajeRoutes');
 const liquidacionRoutes = require('./routes/liquidacionRoutes');
+
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://admin-cars.vercel.app' // Tu nueva URL de Vercel
+  'https://admin-cars.vercel.app'
 ];
 
 const app = express();
 
-app.use(helmet());
-app.use(require('cors')({
+// 🛡️ Configuración de Helmet adaptada para permitir la exportación de recursos cross-origin
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Usamos directamente tu constante allowedOrigins de forma limpia
+app.use(cors({
   origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
