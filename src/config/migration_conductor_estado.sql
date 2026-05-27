@@ -1,0 +1,1 @@
+ALTER TABLE conductores ADD COLUMN estado INT DEFAULT 1;
