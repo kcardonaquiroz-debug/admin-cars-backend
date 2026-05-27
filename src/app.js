@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const authControllers = require('./controllers/authController');
 const authMiddlewares = require('./middleware/authMiddleware');
@@ -41,6 +42,9 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos de uploads
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api/v1', camionRouthes);
 app.use('/api/v1', condutorRoutes);

@@ -72,7 +72,15 @@ const eliminarCamion = async (id) => {
     }
 };
 
+const actualizarFotoCamion = async (id, url) => {
+    const [result] = await db.execute(
+        `UPDATE camiones SET foto_url=? WHERE id_camion=?`,
+        [url, id]
+    );
+    return result;
+};
+
 module.exports = {
     obtenerCamiones, obtenerResumenCamion,
-    crearCamion, actualizarCamion, eliminarCamion
+    crearCamion, actualizarCamion, eliminarCamion, actualizarFotoCamion
 };
