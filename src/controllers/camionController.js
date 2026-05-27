@@ -53,7 +53,7 @@ const uploadPhoto = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No se seleccionó ninguna imagen' });
         }
-        const url = `/uploads/${req.file.filename}`;
+        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         await camionService.actualizarFotoCamion(req.params.id, url);
         res.json({ success: true, data: { foto_url: url } });
     } catch (error) {
