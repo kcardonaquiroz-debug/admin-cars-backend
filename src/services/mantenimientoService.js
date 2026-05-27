@@ -22,10 +22,17 @@ const actualizarMantenimiento = async (id, m) => {
 };
 
 const eliminarMantenimiento = async (id) => {
-    const [result] = await db.execute(
-        `DELETE FROM mantenimientos WHERE id_mantenimiento=?`, [id]
-    );
-    return result;
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM mantenimientos WHERE id_mantenimiento=?`, [id]
+        );
+        return result;
+    } catch (error) {
+        if (error.errno === 1451) {
+            throw new Error('No se puede eliminar el mantenimiento porque tiene registros asociados.');
+        }
+        throw error;
+    }
 };
 
 module.exports = { obtenerMantenimientos, crearMantenimiento, actualizarMantenimiento, eliminarMantenimiento };

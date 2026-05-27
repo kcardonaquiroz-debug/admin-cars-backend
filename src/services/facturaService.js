@@ -22,10 +22,17 @@ const actualizarFactura = async (id, f) => {
 };
 
 const eliminarFactura = async (id) => {
-    const [result] = await db.execute(
-        `DELETE FROM facturas WHERE id_factura=?`, [id]
-    );
-    return result;
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM facturas WHERE id_factura=?`, [id]
+        );
+        return result;
+    } catch (error) {
+        if (error.errno === 1451) {
+            throw new Error('No se puede eliminar la factura porque tiene registros asociados.');
+        }
+        throw error;
+    }
 };
 
 module.exports = { obtenerFacturas, crearFactura, actualizarFactura, eliminarFactura };

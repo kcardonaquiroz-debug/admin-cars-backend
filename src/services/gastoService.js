@@ -7,16 +7,16 @@ const obtenerGastos = async () => {
 
 const crearGasto = async (g) => {
     const [result] = await db.execute(
-        `INSERT INTO gastos VALUES(null,?,?,?)`,
-        [g.fk_viaje, g.tipo_gasto, g.monto]
+        `INSERT INTO gastos (fk_viaje, tipo_gasto, categoria, monto) VALUES(?,?,?,?)`,
+        [g.fk_viaje, g.tipo_gasto, g.categoria || null, g.monto]
     );
     return result;
 };
 
 const actualizarGasto = async (id, g) => {
     const [result] = await db.execute(
-        `UPDATE gastos SET fk_viaje=?, tipo_gasto=?, monto=? WHERE id_gastos=?`,
-        [g.fk_viaje, g.tipo_gasto, g.monto, id]
+        `UPDATE gastos SET fk_viaje=?, tipo_gasto=?, categoria=?, monto=? WHERE id_gastos=?`,
+        [g.fk_viaje, g.tipo_gasto, g.categoria || null, g.monto, id]
     );
     return result;
 };

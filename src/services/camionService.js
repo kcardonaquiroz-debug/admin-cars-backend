@@ -59,10 +59,17 @@ const actualizarCamion = async (id, c) => {
 };
 
 const eliminarCamion = async (id) => {
-    const [result] = await db.execute(
-        `DELETE FROM camiones WHERE id_camion=?`, [id]
-    );
-    return result;
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM camiones WHERE id_camion=?`, [id]
+        );
+        return result;
+    } catch (error) {
+        if (error.errno === 1451) {
+            throw new Error('No se puede eliminar el camión porque tiene viajes o mantenimientos asociados.');
+        }
+        throw error;
+    }
 };
 
 module.exports = {

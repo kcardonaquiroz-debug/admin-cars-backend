@@ -22,10 +22,17 @@ const actualizarConductor = async (id, c) => {
 };
 
 const eliminarConductor = async (id) => {
-    const [result] = await db.execute(
-        `DELETE FROM conductores WHERE id_conductor=?`, [id]
-    );
-    return result;
+    try {
+        const [result] = await db.execute(
+            `DELETE FROM conductores WHERE id_conductor=?`, [id]
+        );
+        return result;
+    } catch (error) {
+        if (error.errno === 1451) {
+            throw new Error('No se puede eliminar el conductor porque tiene viajes, camiones o facturas asociados.');
+        }
+        throw error;
+    }
 };
 
 module.exports = { obtenerConductores, crearConductor, actualizarConductor, eliminarConductor };
