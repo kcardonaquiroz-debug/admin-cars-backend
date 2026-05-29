@@ -17,6 +17,7 @@ const gastoRoutes = require('./routes/gastoRoutes');
 const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
 const viajeRoutes = require('./routes/viajeRoutes');
 const liquidacionRoutes = require('./routes/liquidacionRoutes');
+const analisisRoutes = require('./routes/analisisRoutes');
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -53,6 +54,7 @@ app.use('/api/v1', gastoRoutes);
 app.use('/api/v1', mantenimientoRoutes);
 app.use('/api/v1', viajeRoutes);
 app.use('/api/v1', liquidacionRoutes);
+app.use('/api/v1', analisisRoutes);
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api', healthRoutes);
