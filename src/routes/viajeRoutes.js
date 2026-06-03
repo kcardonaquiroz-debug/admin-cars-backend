@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const v = require("../controllers/viajeController");
-const { verificarToken } = require("../middleware/authMiddleware");
+const { verificarToken, soloAdmin } = require("../middleware/authMiddleware");
 
 router.get("/viajes", verificarToken, v.getViajes);
 router.get("/viajes/:id", verificarToken, v.getViaje);
 router.post("/viajes", verificarToken, v.postViaje);
 router.put("/viajes/:id", verificarToken, v.putViaje);
-router.delete("/viajes/:id", verificarToken, v.deleteViaje);
+router.delete("/viajes/:id", verificarToken, soloAdmin, v.deleteViaje);
 
 module.exports = router;

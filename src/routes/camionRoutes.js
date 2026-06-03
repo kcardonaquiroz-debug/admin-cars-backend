@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const c = require("../controllers/camionController");
-const { verificarToken } = require("../middleware/authMiddleware");
+const { verificarToken, soloAdmin } = require("../middleware/authMiddleware");
 
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', '..', 'uploads'),
@@ -28,7 +28,7 @@ router.get("/camiones/mio/resumen", verificarToken, c.getMiResumen);
 router.get("/camiones/:id/resumen", verificarToken, c.getResumenCamion);
 router.post("/camiones", verificarToken, c.postCamion);
 router.put("/camiones/:id", verificarToken, c.putCamion);
-router.delete("/camiones/:id", verificarToken, c.deleteCamion);
+router.delete("/camiones/:id", verificarToken, soloAdmin, c.deleteCamion);
 router.post("/camiones/:id/upload", verificarToken, upload.single('foto'), c.uploadPhoto);
 
 module.exports = router;

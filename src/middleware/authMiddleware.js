@@ -32,4 +32,14 @@ const autorizarRoles = (...rolesPermitidos) => {
     };
 };
 
-module.exports = { verificarToken, autorizarRoles };
+const soloAdmin = (req, res, next) => {
+    if (!req.user || req.user.rol !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            error: 'Solo el Administrador puede realizar esta acción.'
+        });
+    }
+    next();
+};
+
+module.exports = { verificarToken, autorizarRoles, soloAdmin };
