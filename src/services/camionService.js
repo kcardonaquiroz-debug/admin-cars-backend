@@ -38,7 +38,14 @@ const obtenerResumenCamion = async (id, fecha_inicio, fecha_fin) => {
     };
 };
 
+const validarCapacidad = (capacidad) => {
+    if (capacidad == null || isNaN(capacidad) || Number(capacidad) <= 0) {
+        throw new Error('La capacidad debe ser un número mayor a 0');
+    }
+};
+
 const crearCamion = async (c) => {
+    validarCapacidad(c.capacidad);
     const [result] = await db.execute(
         `INSERT INTO camiones (marca, placa, modelo, capacidad, estado, fk_conductor, foto_url)
          VALUES (?,?,?,?,?,?,?)`,
@@ -49,6 +56,7 @@ const crearCamion = async (c) => {
 };
 
 const actualizarCamion = async (id, c) => {
+    validarCapacidad(c.capacidad);
     const [result] = await db.execute(
         `UPDATE camiones SET marca=?, placa=?, modelo=?, capacidad=?,
          estado=?, fk_conductor=?, foto_url=? WHERE id_camion=?`,

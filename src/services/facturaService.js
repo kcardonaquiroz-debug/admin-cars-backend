@@ -5,7 +5,14 @@ const obtenerFacturas = async () => {
     return rows;
 };
 
+const validarBasico = (basico) => {
+    if (basico == null || isNaN(basico) || Number(basico) < 0) {
+        throw new Error('El básico no puede ser negativo ni estar vacío');
+    }
+};
+
 const crearFactura = async (f) => {
+    validarBasico(f.basico);
     const [result] = await db.execute(
         `INSERT INTO facturas VALUES(null,?,?,?,?)`,
         [f.fk_conductor, f.nombre_conductor, f.basico, f.fecha_factura]
@@ -14,6 +21,7 @@ const crearFactura = async (f) => {
 };
 
 const actualizarFactura = async (id, f) => {
+    validarBasico(f.basico);
     const [result] = await db.execute(
         `UPDATE facturas SET fk_conductor=?, nombre_conductor=?, basico=?, fecha_factura=? WHERE id_factura=?`,
         [f.fk_conductor, f.nombre_conductor, f.basico, f.fecha_factura, id]

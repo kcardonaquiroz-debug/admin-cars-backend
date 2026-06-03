@@ -54,7 +54,17 @@ const obtenerViajePorId = async (id) => {
     return rows[0];
 };
 
+const validarViaje = (v) => {
+    if (v.valor_flete == null || isNaN(v.valor_flete) || Number(v.valor_flete) < 0) {
+        throw new Error('El valor del flete no puede ser negativo ni estar vacío');
+    }
+    if (v.fecha_salida && v.fecha_llegada && new Date(v.fecha_llegada) < new Date(v.fecha_salida)) {
+        throw new Error('La fecha de llegada debe ser posterior a la fecha de salida');
+    }
+};
+
 const crearViaje = async (v) => {
+    validarViaje(v);
     const [result] = await db.execute(
         `INSERT INTO viajes (fk_camion, fk_conductor, nro_guia, fecha_salida, fecha_llegada, producto_carga, origen, destino, valor_flete, estado)
          VALUES (?,?,?,?,?,?,?,?,?,?)`,
@@ -66,6 +76,7 @@ const crearViaje = async (v) => {
 };
 
 const actualizarViaje = async (id, v) => {
+    validarViaje(v);
     const [result] = await db.execute(
         `UPDATE viajes SET fk_camion=?, fk_conductor=?, nro_guia=?,
          fecha_salida=?, fecha_llegada=?, producto_carga=?,

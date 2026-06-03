@@ -5,7 +5,14 @@ const obtenerMantenimientos = async () => {
     return rows;
 };
 
+const validarCosto = (costo) => {
+    if (costo == null || isNaN(costo) || Number(costo) < 0) {
+        throw new Error('El costo total no puede ser negativo ni estar vacío');
+    }
+};
+
 const crearMantenimiento = async (m) => {
+    validarCosto(m.costo_total);
     const [result] = await db.execute(
         `INSERT INTO mantenimientos VALUES(null,?,?,?,?)`,
         [m.fk_camion, m.descripcion, m.costo_total, m.fecha_mantenimiento]
@@ -14,6 +21,7 @@ const crearMantenimiento = async (m) => {
 };
 
 const actualizarMantenimiento = async (id, m) => {
+    validarCosto(m.costo_total);
     const [result] = await db.execute(
         `UPDATE mantenimientos SET fk_camion=?, descripcion=?, costo_total=?, fecha_mantenimiento=? WHERE id_mantenimiento=?`,
         [m.fk_camion, m.descripcion, m.costo_total, m.fecha_mantenimiento, id]
