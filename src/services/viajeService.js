@@ -54,17 +54,30 @@ const obtenerViajePorId = async (id) => {
     return rows[0];
 };
 
-const validarViaje = (v) => {
+const validarViaje = async (v) => {
     if (v.valor_flete == null || isNaN(v.valor_flete) || Number(v.valor_flete) < 0) {
         throw new Error('El valor del flete no puede ser negativo ni estar vacío');
     }
     if (v.fecha_salida && v.fecha_llegada && new Date(v.fecha_llegada) < new Date(v.fecha_salida)) {
         throw new Error('La fecha de llegada debe ser posterior a la fecha de salida');
     }
+    if (v.fk_conductor && v.fecha_salida) {
+        const [rows] = await db.query(
+            `SELECT licencia_vence FROM conductores WHERE id_conductor = ?`,
+            [v.fk_conductor]
+        );
+        if (rows.length > 0 && rows[0].licencia_vence) {
+            const fechaViaje = new Date(v.fecha_salida);
+            const vence = new Date(rows[0].licencia_vence);
+            if (fechaViaje > vence) {
+                throw new Error('La licencia del conductor está vencida para la fecha de este viaje');
+            }
+        }
+    }
 };
 
 const crearViaje = async (v) => {
-    validarViaje(v);
+    await validarViaje(v);
     const [result] = await db.execute(
         `INSERT INTO viajes (fk_camion, fk_conductor, nro_guia, fecha_salida, fecha_llegada, producto_carga, origen, destino, valor_flete, estado)
          VALUES (?,?,?,?,?,?,?,?,?,?)`,
@@ -76,7 +89,7 @@ const crearViaje = async (v) => {
 };
 
 const actualizarViaje = async (id, v) => {
-    validarViaje(v);
+    await validarViaje(v);
     const [result] = await db.execute(
         `UPDATE viajes SET fk_camion=?, fk_conductor=?, nro_guia=?,
          fecha_salida=?, fecha_llegada=?, producto_carga=?,
