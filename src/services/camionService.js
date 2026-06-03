@@ -44,8 +44,24 @@ const validarCapacidad = (capacidad) => {
     }
 };
 
+const validarPlacaUnica = async (placa, excluirId = null) => {
+    if (!placa) return;
+    const [rows] = await db.execute(
+        excluirId
+            ? 'SELECT id_camion FROM camiones WHERE placa = ? AND id_camion != ?'
+            : 'SELECT id_camion FROM camiones WHERE placa = ?',
+        excluirId ? [placa, excluirId] : [placa]
+    );
+    if (rows.length > 0) {
+        const error = new Error('Ya existe un camión con esa placa');
+        error.statusCode = 400;
+        throw error;
+    }
+};
+
 const crearCamion = async (c) => {
     validarCapacidad(c.capacidad);
+    await validarPlacaUnica(c.placa);
     const [result] = await db.execute(
         `INSERT INTO camiones (marca, placa, modelo, capacidad, estado, fk_conductor, foto_url)
          VALUES (?,?,?,?,?,?,?)`,
@@ -57,6 +73,7 @@ const crearCamion = async (c) => {
 
 const actualizarCamion = async (id, c) => {
     validarCapacidad(c.capacidad);
+    await validarPlacaUnica(c.placa, id);
     const [result] = await db.execute(
         `UPDATE camiones SET marca=?, placa=?, modelo=?, capacidad=?,
          estado=?, fk_conductor=?, foto_url=? WHERE id_camion=?`,
