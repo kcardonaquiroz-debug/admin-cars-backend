@@ -66,6 +66,48 @@ const actualizarCamion = async (id, c) => {
     return result;
 };
 
+const obtenerMiResumen = async (fkUsuario, fecha_inicio, fecha_fin) => {
+    const [conductor] = await db.query(
+        `SELECT id_conductor FROM conductores WHERE fk_usuario = ? AND estado = 1`,
+        [fkUsuario]
+    );
+    if (conductor.length === 0) {
+        throw new Error('No se encontró un conductor activo para este usuario');
+    }
+    const [camion] = await db.query(
+        `SELECT c.*, con.nombre AS nombre_conductor
+         FROM camiones c
+         LEFT JOIN conductores con ON c.fk_conductor = con.id_conductor
+         WHERE c.fk_conductor = ?`, [conductor[0].id_conductor]
+    );
+    if (camion.length === 0) {
+        throw new Error('No tienes un camión asignado');
+    }
+
+    const inicio = fecha_inicio || '2020-01-01';
+    const fin = fecha_fin || new Date().toISOString().slice(0, 10);
+
+    const [viajes] = await db.query(`
+        SELECT v.*,
+               COALESCE((SELECT SUM(g.monto) FROM gastos g WHERE g.fk_viaje = v.id_viaje), 0) AS total_gastos,
+               v.valor_flete - COALESCE((SELECT SUM(g.monto) FROM gastos g WHERE g.fk_viaje = v.id_viaje), 0) AS saldo
+        FROM viajes v
+        WHERE v.fk_camion = ?
+        AND v.fecha_salida BETWEEN ? AND ?
+        ORDER BY v.fecha_salida DESC
+    `, [camion[0].id_camion, inicio, fin]);
+
+    const totalFletes = viajes.reduce((s, v) => s + (v.valor_flete || 0), 0);
+    const totalGastos = viajes.reduce((s, v) => s + (v.total_gastos || 0), 0);
+    const totalSaldo = totalFletes - totalGastos;
+
+    return {
+        camion: camion[0],
+        viajes,
+        resumen: { totalFletes, totalGastos, totalSaldo, totalViajes: viajes.length }
+    };
+};
+
 const eliminarCamion = async (id) => {
     try {
         const [result] = await db.execute(
@@ -89,6 +131,6 @@ const actualizarFotoCamion = async (id, url) => {
 };
 
 module.exports = {
-    obtenerCamiones, obtenerResumenCamion,
+    obtenerCamiones, obtenerResumenCamion, obtenerMiResumen,
     crearCamion, actualizarCamion, eliminarCamion, actualizarFotoCamion
 };

@@ -24,6 +24,7 @@ const upload = multer({
 });
 
 router.get("/camiones", verificarToken, c.getCamiones);
+router.get("/camiones/mio/resumen", verificarToken, c.getMiResumen);
 router.get("/camiones/:id/resumen", verificarToken, c.getResumenCamion);
 router.post("/camiones", verificarToken, c.postCamion);
 router.put("/camiones/:id", verificarToken, c.putCamion);

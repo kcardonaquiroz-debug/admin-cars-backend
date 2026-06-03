@@ -39,6 +39,16 @@ const putCamion = async (req, res) => {
     }
 };
 
+const getMiResumen = async (req, res) => {
+    try {
+        const { fecha_inicio, fecha_fin } = req.query;
+        const data = await camionService.obtenerMiResumen(req.user.id, fecha_inicio, fecha_fin);
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const deleteCamion = async (req, res) => {
     try {
         await camionService.eliminarCamion(req.params.id);
@@ -61,4 +71,4 @@ const uploadPhoto = async (req, res) => {
     }
 };
 
-module.exports = { getCamiones, getResumenCamion, postCamion, putCamion, deleteCamion, uploadPhoto };
+module.exports = { getCamiones, getResumenCamion, getMiResumen, postCamion, putCamion, deleteCamion, uploadPhoto };
