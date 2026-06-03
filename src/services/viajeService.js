@@ -1,20 +1,27 @@
 const db = require("../config/db");
 
-const obtenerViajes = async () => {
-    const [rows] = await db.query(`
+const obtenerViajes = async (search) => {
+    let sql = `
         SELECT v.*, 
                c.marca, c.modelo, c.placa,
                con.nombre AS nombre_conductor
         FROM viajes v
         LEFT JOIN camiones c ON v.fk_camion = c.id_camion
         LEFT JOIN conductores con ON v.fk_conductor = con.id_conductor
-        ORDER BY v.id_viaje DESC
-    `);
+    `;
+    const params = [];
+    if (search) {
+        sql += ` WHERE (v.nro_guia LIKE ? OR v.origen LIKE ? OR v.destino LIKE ? OR v.producto_carga LIKE ? OR c.placa LIKE ? OR con.nombre LIKE ?)`;
+        const like = `%${search}%`;
+        params.push(like, like, like, like, like, like);
+    }
+    sql += ` ORDER BY v.id_viaje DESC`;
+    const [rows] = await db.query(sql, params);
     return rows;
 };
 
-const obtenerViajesPorConductor = async (fk_usuario) => {
-    const [rows] = await db.query(`
+const obtenerViajesPorConductor = async (fk_usuario, search) => {
+    let sql = `
         SELECT v.*, 
                c.marca, c.modelo, c.placa,
                con.nombre AS nombre_conductor
@@ -22,8 +29,15 @@ const obtenerViajesPorConductor = async (fk_usuario) => {
         LEFT JOIN camiones c ON v.fk_camion = c.id_camion
         LEFT JOIN conductores con ON v.fk_conductor = con.id_conductor
         WHERE con.fk_usuario = ?
-        ORDER BY v.id_viaje DESC
-    `, [fk_usuario]);
+    `;
+    const params = [fk_usuario];
+    if (search) {
+        sql += ` AND (v.nro_guia LIKE ? OR v.origen LIKE ? OR v.destino LIKE ? OR v.producto_carga LIKE ? OR c.placa LIKE ?)`;
+        const like = `%${search}%`;
+        params.push(like, like, like, like, like);
+    }
+    sql += ` ORDER BY v.id_viaje DESC`;
+    const [rows] = await db.query(sql, params);
     return rows;
 };
 

@@ -3,11 +3,12 @@ const viajeService = require("../services/viajeService");
 const getViajes = async (req, res) => {
     try {
         const usuario = req.user;
+        const { search } = req.query;
         let data;
         if (usuario.rol === 'Conductor') {
-            data = await viajeService.obtenerViajesPorConductor(usuario.id);
+            data = await viajeService.obtenerViajesPorConductor(usuario.id, search);
         } else {
-            data = await viajeService.obtenerViajes();
+            data = await viajeService.obtenerViajes(search);
         }
         res.json({ success: true, data });
     } catch (error) {
