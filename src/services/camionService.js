@@ -2,7 +2,11 @@ const db = require("../config/db");
 
 const obtenerCamiones = async () => {
     const [rows] = await db.query(`
-        SELECT c.*, con.nombre AS nombre_conductor
+        SELECT c.*,
+               DATE_FORMAT(c.matricula_fecha, '%Y-%m-%d') AS matricula_fecha,
+               DATE_FORMAT(c.seguro_vence, '%Y-%m-%d') AS seguro_vence,
+               DATE_FORMAT(c.tecnomecanica_vence, '%Y-%m-%d') AS tecnomecanica_vence,
+               con.nombre AS nombre_conductor
         FROM camiones c
         LEFT JOIN conductores con ON c.fk_conductor = con.id_conductor
     `);
@@ -11,7 +15,11 @@ const obtenerCamiones = async () => {
 
 const obtenerResumenCamion = async (id, fecha_inicio, fecha_fin) => {
     const [camion] = await db.query(
-        `SELECT c.*, con.nombre AS nombre_conductor
+        `SELECT c.*,
+               DATE_FORMAT(c.matricula_fecha, '%Y-%m-%d') AS matricula_fecha,
+               DATE_FORMAT(c.seguro_vence, '%Y-%m-%d') AS seguro_vence,
+               DATE_FORMAT(c.tecnomecanica_vence, '%Y-%m-%d') AS tecnomecanica_vence,
+               con.nombre AS nombre_conductor
          FROM camiones c
          LEFT JOIN conductores con ON c.fk_conductor = con.id_conductor
          WHERE c.id_camion = ?`, [id]
@@ -59,14 +67,33 @@ const validarPlacaUnica = async (placa, excluirId = null) => {
     }
 };
 
+// Documentos del camión: matrícula, seguro (SOAT / póliza) y revisión tecnomecánica
+const texto = (v) => (v === undefined || v === null || String(v).trim() === '') ? null : String(v).trim();
+const fecha = (v, nombre) => {
+    const t = texto(v);
+    if (!t) return null;
+    const f = t.slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || isNaN(new Date(f))) {
+        throw new Error(`La fecha de ${nombre} no es válida`);
+    }
+    return f;
+};
+const documentos = (c) => [
+    texto(c.matricula_nro), fecha(c.matricula_fecha, 'matrícula'),
+    texto(c.seguro_aseguradora), texto(c.seguro_poliza), fecha(c.seguro_vence, 'vencimiento del seguro'),
+    texto(c.tecnomecanica_nro), fecha(c.tecnomecanica_vence, 'vencimiento de la tecnomecánica')
+];
+
 const crearCamion = async (c) => {
     validarCapacidad(c.capacidad);
     await validarPlacaUnica(c.placa);
     const [result] = await db.execute(
-        `INSERT INTO camiones (marca, placa, modelo, capacidad, estado, fk_conductor, foto_url)
-         VALUES (?,?,?,?,?,?,?)`,
+        `INSERT INTO camiones (marca, placa, modelo, capacidad, estado, fk_conductor, foto_url,
+             matricula_nro, matricula_fecha, seguro_aseguradora, seguro_poliza, seguro_vence,
+             tecnomecanica_nro, tecnomecanica_vence)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         [c.marca, c.placa || null, c.modelo, c.capacidad,
-         c.estado, c.fk_conductor || null, c.foto_url || null]
+         c.estado, c.fk_conductor || null, c.foto_url || null, ...documentos(c)]
     );
     return result;
 };
@@ -76,9 +103,12 @@ const actualizarCamion = async (id, c) => {
     await validarPlacaUnica(c.placa, id);
     const [result] = await db.execute(
         `UPDATE camiones SET marca=?, placa=?, modelo=?, capacidad=?,
-         estado=?, fk_conductor=?, foto_url=? WHERE id_camion=?`,
+         estado=?, fk_conductor=?, foto_url=?,
+         matricula_nro=?, matricula_fecha=?, seguro_aseguradora=?, seguro_poliza=?, seguro_vence=?,
+         tecnomecanica_nro=?, tecnomecanica_vence=?
+         WHERE id_camion=?`,
         [c.marca, c.placa, c.modelo, c.capacidad,
-         c.estado, c.fk_conductor || null, c.foto_url || null, id]
+         c.estado, c.fk_conductor || null, c.foto_url || null, ...documentos(c), id]
     );
     return result;
 };
@@ -92,7 +122,11 @@ const obtenerMiResumen = async (fkUsuario, fecha_inicio, fecha_fin) => {
         throw new Error('No se encontró un conductor activo para este usuario');
     }
     const [camion] = await db.query(
-        `SELECT c.*, con.nombre AS nombre_conductor
+        `SELECT c.*,
+               DATE_FORMAT(c.matricula_fecha, '%Y-%m-%d') AS matricula_fecha,
+               DATE_FORMAT(c.seguro_vence, '%Y-%m-%d') AS seguro_vence,
+               DATE_FORMAT(c.tecnomecanica_vence, '%Y-%m-%d') AS tecnomecanica_vence,
+               con.nombre AS nombre_conductor
          FROM camiones c
          LEFT JOIN conductores con ON c.fk_conductor = con.id_conductor
          WHERE c.fk_conductor = ?`, [conductor[0].id_conductor]

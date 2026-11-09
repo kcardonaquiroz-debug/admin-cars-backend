@@ -1,5 +1,6 @@
 /**
- * Migración: toneladas en viajes, catálogo de tipos de gasto y rol SuperAdmin.
+ * Migración: toneladas en viajes, documentos de camiones (matrícula, seguro, tecnomecánica),
+ * catálogo de tipos de gasto y rol SuperAdmin.
  * Se puede ejecutar varias veces sin problema (solo aplica lo que falte).
  *
  * Uso (desde la carpeta Backend):
@@ -46,6 +47,23 @@ const columnaExiste = async (conn, tabla, columna) => {
             await conn.query(`ALTER TABLE viajes ADD COLUMN toneladas DECIMAL(10,2) NULL AFTER producto_carga`);
             console.log('✓ Columna viajes.toneladas creada');
         } else console.log('· viajes.toneladas ya existía');
+
+        // 1b. Documentos del camión: matrícula, seguro y tecnomecánica
+        const columnasCamion = [
+            ['matricula_nro', 'VARCHAR(50) NULL'],
+            ['matricula_fecha', 'DATE NULL'],
+            ['seguro_aseguradora', 'VARCHAR(100) NULL'],
+            ['seguro_poliza', 'VARCHAR(50) NULL'],
+            ['seguro_vence', 'DATE NULL'],
+            ['tecnomecanica_nro', 'VARCHAR(50) NULL'],
+            ['tecnomecanica_vence', 'DATE NULL'],
+        ];
+        for (const [columna, definicion] of columnasCamion) {
+            if (!(await columnaExiste(conn, 'camiones', columna))) {
+                await conn.query(`ALTER TABLE camiones ADD COLUMN ${columna} ${definicion}`);
+                console.log(`✓ Columna camiones.${columna} creada`);
+            }
+        }
 
         // 2. Catálogo de tipos de gasto
         await conn.query(`

@@ -26,7 +26,7 @@ const postCamion = async (req, res) => {
         const result = await camionService.crearCamion(req.body);
         res.status(201).json({ success: true, data: result });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(error.statusCode || 500).json({ error: error.message, message: error.message });
     }
 };
 
@@ -35,7 +35,7 @@ const putCamion = async (req, res) => {
         const result = await camionService.actualizarCamion(req.params.id, req.body);
         res.json({ success: true, data: result });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(error.statusCode || 500).json({ error: error.message, message: error.message });
     }
 };
 

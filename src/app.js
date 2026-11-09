@@ -20,6 +20,7 @@ const liquidacionRoutes = require('./routes/liquidacionRoutes');
 const analisisRoutes = require('./routes/analisisRoutes');
 const tipoGastoRoutes = require('./routes/tipoGastoRoutes');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const alertaRoutes = require('./routes/alertaRoutes');
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -59,6 +60,7 @@ app.use('/api/v1', liquidacionRoutes);
 app.use('/api/v1', analisisRoutes);
 app.use('/api/v1', tipoGastoRoutes);
 app.use('/api/v1', usuarioRoutes);
+app.use('/api/v1', alertaRoutes);
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api', healthRoutes);
