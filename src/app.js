@@ -29,6 +29,9 @@ const allowedOrigins = [
 
 const app = express();
 
+// Render está detrás de un proxy HTTPS: así req.protocol devuelve 'https'
+app.set('trust proxy', 1);
+
 // 🛡️ Configuración de Helmet adaptada para permitir la exportación de recursos cross-origin
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },

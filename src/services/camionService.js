@@ -164,6 +164,7 @@ const eliminarCamion = async (id) => {
         const [result] = await db.execute(
             `DELETE FROM camiones WHERE id_camion=?`, [id]
         );
+        await db.execute(`DELETE FROM camion_fotos WHERE fk_camion=?`, [id]);
         return result;
     } catch (error) {
         if (error.errno === 1451) {
@@ -171,6 +172,25 @@ const eliminarCamion = async (id) => {
         }
         throw error;
     }
+};
+
+const camionExiste = async (id) => {
+    const [rows] = await db.query(`SELECT id_camion FROM camiones WHERE id_camion = ?`, [id]);
+    return rows.length > 0;
+};
+
+// Foto guardada en la tabla camion_fotos (binario)
+const guardarFotoCamion = async (id, buffer, mime) => {
+    await db.query(
+        `INSERT INTO camion_fotos (fk_camion, data, mime) VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE data = VALUES(data), mime = VALUES(mime)`,
+        [id, buffer, mime]
+    );
+};
+
+const obtenerFotoCamion = async (id) => {
+    const [rows] = await db.query(`SELECT data, mime FROM camion_fotos WHERE fk_camion = ?`, [id]);
+    return rows[0];
 };
 
 const actualizarFotoCamion = async (id, url) => {
@@ -183,5 +203,6 @@ const actualizarFotoCamion = async (id, url) => {
 
 module.exports = {
     obtenerCamiones, obtenerResumenCamion, obtenerMiResumen,
-    crearCamion, actualizarCamion, eliminarCamion, actualizarFotoCamion
+    crearCamion, actualizarCamion, eliminarCamion, actualizarFotoCamion,
+    camionExiste, guardarFotoCamion, obtenerFotoCamion
 };

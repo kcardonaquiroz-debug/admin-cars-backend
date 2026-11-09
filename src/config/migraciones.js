@@ -51,6 +51,24 @@ const aplicarMigraciones = async (conn, { superadmin = null, soloSiNoHaySuperAdm
         }
     }
 
+    // 2b. Fotos de camiones (se guardan en la BD porque el disco de Render es temporal)
+    await conn.query(`
+        CREATE TABLE IF NOT EXISTS camion_fotos (
+            fk_camion INT PRIMARY KEY,
+            data MEDIUMBLOB NOT NULL,
+            mime VARCHAR(50) NOT NULL,
+            actualizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`);
+
+    // foto_url debe aceptar URLs largas
+    const [[colFoto]] = await conn.query(
+        `SELECT CHARACTER_MAXIMUM_LENGTH AS largo FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camiones' AND COLUMN_NAME = 'foto_url'`);
+    if (colFoto && colFoto.largo !== null && Number(colFoto.largo) < 500) {
+        await conn.query('ALTER TABLE camiones MODIFY foto_url VARCHAR(500) NULL');
+        log('✓ camiones.foto_url ampliado a 500 caracteres');
+    }
+
     // 3. Catálogo de tipos de gasto
     await conn.query(`
         CREATE TABLE IF NOT EXISTS tipos_gasto (

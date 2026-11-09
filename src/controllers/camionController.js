@@ -61,14 +61,31 @@ const deleteCamion = async (req, res) => {
 const uploadPhoto = async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No se seleccionó ninguna imagen' });
+            return res.status(400).json({ error: 'No se seleccionó ninguna imagen', message: 'No se seleccionó ninguna imagen' });
         }
-        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const existe = await camionService.camionExiste(req.params.id);
+        if (!existe) return res.status(404).json({ error: 'Camión no encontrado', message: 'Camión no encontrado' });
+
+        await camionService.guardarFotoCamion(req.params.id, req.file.buffer, req.file.mimetype);
+        // ?v= cambia en cada subida para que el navegador no muestre la foto anterior en caché
+        const url = `${req.protocol}://${req.get('host')}/api/v1/camiones/${req.params.id}/foto?v=${Date.now()}`;
         await camionService.actualizarFotoCamion(req.params.id, url);
         res.json({ success: true, data: { foto_url: url } });
+    } catch (error) {
+        res.status(500).json({ error: error.message, message: error.message });
+    }
+};
+
+const getFoto = async (req, res) => {
+    try {
+        const foto = await camionService.obtenerFotoCamion(req.params.id);
+        if (!foto) return res.status(404).json({ error: 'Este camión no tiene foto' });
+        res.set('Content-Type', foto.mime);
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+        res.send(foto.data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-module.exports = { getCamiones, getResumenCamion, getMiResumen, postCamion, putCamion, deleteCamion, uploadPhoto };
+module.exports = { getCamiones, getResumenCamion, getMiResumen, postCamion, putCamion, deleteCamion, uploadPhoto, getFoto };
