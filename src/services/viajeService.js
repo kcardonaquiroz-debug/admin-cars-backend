@@ -54,7 +54,19 @@ const obtenerViajePorId = async (id) => {
     return rows[0];
 };
 
-const validarViaje = async (v) => {
+const normalizarToneladas = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return null;
+    return Number(valor);
+};
+
+const validarViaje = async (v, { esNuevo = false } = {}) => {
+    const toneladas = normalizarToneladas(v.toneladas);
+    if (esNuevo && toneladas === null) {
+        throw new Error('Debes ingresar las toneladas del viaje');
+    }
+    if (toneladas !== null && (isNaN(toneladas) || toneladas <= 0)) {
+        throw new Error('Las toneladas deben ser un número mayor a 0');
+    }
     if (v.valor_flete == null || isNaN(v.valor_flete) || Number(v.valor_flete) < 0) {
         throw new Error('El valor del flete no puede ser negativo ni estar vacío');
     }
@@ -77,12 +89,13 @@ const validarViaje = async (v) => {
 };
 
 const crearViaje = async (v) => {
-    await validarViaje(v);
+    await validarViaje(v, { esNuevo: true });
     const [result] = await db.execute(
-        `INSERT INTO viajes (fk_camion, fk_conductor, nro_guia, fecha_salida, fecha_llegada, producto_carga, origen, destino, valor_flete, estado)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        `INSERT INTO viajes (fk_camion, fk_conductor, nro_guia, fecha_salida, fecha_llegada, producto_carga, toneladas, origen, destino, valor_flete, estado)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         [v.fk_camion, v.fk_conductor, v.nro_guia || null,
          v.fecha_salida, v.fecha_llegada, v.producto_carga,
+         normalizarToneladas(v.toneladas),
          v.origen, v.destino, v.valor_flete, v.estado || 'en_curso']
     );
     return result;
@@ -92,11 +105,12 @@ const actualizarViaje = async (id, v) => {
     await validarViaje(v);
     const [result] = await db.execute(
         `UPDATE viajes SET fk_camion=?, fk_conductor=?, nro_guia=?,
-         fecha_salida=?, fecha_llegada=?, producto_carga=?,
+         fecha_salida=?, fecha_llegada=?, producto_carga=?, toneladas=?,
          origen=?, destino=?, valor_flete=?, estado=?
          WHERE id_viaje=?`,
         [v.fk_camion, v.fk_conductor, v.nro_guia,
          v.fecha_salida, v.fecha_llegada, v.producto_carga,
+         normalizarToneladas(v.toneladas),
          v.origen, v.destino, v.valor_flete, v.estado, id]
     );
     return result;

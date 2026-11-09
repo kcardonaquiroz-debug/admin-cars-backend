@@ -1,6 +1,6 @@
 const AuthService = require('../services/authService');
 
-class AuthController {           
+class AuthController {
 
     static async login(req, res, next) {
         try {
@@ -18,15 +18,6 @@ class AuthController {
         }
     }
 
-    static async registrar(req, res, next) {
-        try {
-            const result = await AuthService.registrarUsuario(req.body);
-            res.status(201).json({ success: true, data: result });
-        } catch (error) {
-            next(error);
-        }
-    }
+}
 
-}                             
-
-module.exports = AuthController; 
+module.exports = AuthController;

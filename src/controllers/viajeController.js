@@ -31,7 +31,7 @@ const postViaje = async (req, res) => {
         const result = await viajeService.crearViaje(req.body);
         res.status(201).json({ success: true, data: result });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message, message: error.message });
     }
 };
 
@@ -40,7 +40,7 @@ const putViaje = async (req, res) => {
         const result = await viajeService.actualizarViaje(req.params.id, req.body);
         res.json({ success: true, data: result });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message, message: error.message });
     }
 };
 

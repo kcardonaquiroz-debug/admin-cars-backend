@@ -3,9 +3,8 @@ const router = express.Router();
 const AuthController = require('../controllers/authController');
 const { verificarToken, autorizarRoles } = require('../middleware/authMiddleware');
 
-// Rutas públicas
-router.post('/register', AuthController.registrar);
-router.post('/login',    AuthController.login);
+// Ruta pública (el registro abierto se eliminó: los usuarios los crea el SuperAdmin en /usuarios)
+router.post('/login', AuthController.login);
 
 // Ruta protegida — requiere token
 router.get('/perfil', verificarToken, (req, res) => {
@@ -19,7 +18,7 @@ router.get('/perfil', verificarToken, (req, res) => {
 router.get(
     '/admin-dashboard',
     verificarToken,
-    autorizarRoles('Administrador', 'co_administrador'),
+    autorizarRoles('SuperAdmin', 'Administrador', 'co_administrador'),
     (req, res) => {
         res.json({
             success: true,

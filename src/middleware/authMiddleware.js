@@ -32,8 +32,9 @@ const autorizarRoles = (...rolesPermitidos) => {
     };
 };
 
+// El SuperAdmin tiene todos los permisos del Administrador
 const soloAdmin = (req, res, next) => {
-    if (!req.user || req.user.rol !== 'Administrador') {
+    if (!req.user || !['Administrador', 'SuperAdmin'].includes(req.user.rol)) {
         return res.status(403).json({
             success: false,
             error: 'Solo el Administrador puede realizar esta acción.'
@@ -42,4 +43,28 @@ const soloAdmin = (req, res, next) => {
     next();
 };
 
-module.exports = { verificarToken, autorizarRoles, soloAdmin };
+// Solo el SuperAdmin puede gestionar usuarios y contraseñas
+const soloSuperAdmin = (req, res, next) => {
+    if (!req.user || req.user.rol !== 'SuperAdmin') {
+        return res.status(403).json({
+            success: false,
+            error: 'Solo el Super Administrador puede realizar esta acción.',
+            message: 'Solo el Super Administrador puede realizar esta acción.'
+        });
+    }
+    next();
+};
+
+// Cualquier rol administrativo (no conductores)
+const noConductor = (req, res, next) => {
+    if (!req.user || req.user.rol === 'Conductor') {
+        return res.status(403).json({
+            success: false,
+            error: 'No tienes los permisos necesarios para realizar esta acción.',
+            message: 'No tienes los permisos necesarios para realizar esta acción.'
+        });
+    }
+    next();
+};
+
+module.exports = { verificarToken, autorizarRoles, soloAdmin, soloSuperAdmin, noConductor };
