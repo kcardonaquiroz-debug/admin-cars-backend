@@ -89,19 +89,15 @@ const generarViajesDemo = async (cantidad = 1000) => {
             const toneladas = Number(azar(capacidad * 0.55, capacidad).toFixed(1));
             const dias = Math.max(1, Math.ceil(km / 450) + (Math.random() < 0.3 ? 1 : 0));
 
-            const salida = new Date(hoy.getTime() - entero(0, 364) * 86400000);
-            const diasDesdeSalida = Math.round((hoy - salida) / 86400000);
-            let estado = 'completado';
-            if (diasDesdeSalida < dias) estado = 'en_curso';
-            else if (Math.random() < 0.04) estado = 'cancelado';
-            const llegada = estado === 'completado' ? fechaISO(new Date(salida.getTime() + dias * 86400000)) : null;
+            const salida = new Date(hoy.getTime() - entero(dias, 364) * 86400000);
+            const llegada = fechaISO(new Date(salida.getTime() + dias * 86400000));
 
             const tarifa = azar(165, 245) * (km < 150 ? 1.6 : 1);   // COP por tonelada-km (rutas cortas cuestan más por km)
             const flete = redondear(Math.max(600000, km * toneladas * tarifa), 10000);
 
             viajes.push([camion.id_camion, conductor, guia, fechaISO(salida), llegada, elegir(PRODUCTOS), toneladas,
-                origen, destino, flete, estado]);
-            if (estado !== 'cancelado') gastosPorGuia[guia] = generarGastos(km, toneladas, dias);
+                origen, destino, flete, 'completado']);
+            gastosPorGuia[guia] = generarGastos(km, toneladas, dias);
         }
 
         const LOTE = 250;

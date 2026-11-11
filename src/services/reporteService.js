@@ -12,16 +12,13 @@ const construirFiltros = (q = {}) => {
     if (q.hasta && FECHA_RE.test(q.hasta)) { condiciones.push('v.fecha_salida < DATE_ADD(?, INTERVAL 1 DAY)'); params.push(q.hasta); }
     if (q.camion) { condiciones.push('v.fk_camion = ?'); params.push(Number(q.camion)); }
     if (q.conductor) { condiciones.push('v.fk_conductor = ?'); params.push(Number(q.conductor)); }
-    // estado: '' (por defecto) = todos menos cancelados · 'todos' = incluye cancelados · o un estado concreto
-    if (!q.estado) condiciones.push("(v.estado IS NULL OR v.estado <> 'cancelado')");
-    else if (q.estado !== 'todos') { condiciones.push('v.estado = ?'); params.push(q.estado); }
     return { where: condiciones.length ? 'WHERE ' + condiciones.join(' AND ') : '', params };
 };
 
 // Viajes filtrados con su total de gastos (subconsulta reutilizable)
 const baseViajes = (where) => `
     SELECT v.id_viaje, v.nro_guia, v.fecha_salida, v.fecha_llegada, v.origen, v.destino,
-           v.producto_carga, COALESCE(v.toneladas, 0) AS toneladas, v.estado,
+           v.producto_carga, COALESCE(v.toneladas, 0) AS toneladas,
            COALESCE(v.valor_flete, 0) AS flete, COALESCE(g.total, 0) AS gastos,
            v.fk_camion, v.fk_conductor
     FROM viajes v
@@ -46,7 +43,7 @@ const obtenerReporte = async (q) => {
     const { where, params } = construirFiltros(q);
     const base = baseViajes(where);
 
-    const [[totales], [porMes], [porCamion], [porConductor], [porRuta], [porEstado], [gastosPorTipo]] = await Promise.all([
+    const [[totales], [porMes], [porCamion], [porConductor], [porRuta], [gastosPorTipo]] = await Promise.all([
         db.query(`SELECT ${AGREGADOS} FROM (${base}) b`, params),
         db.query(`SELECT DATE_FORMAT(b.fecha_salida, '%Y-%m') AS mes, ${AGREGADOS}
                   FROM (${base}) b WHERE b.fecha_salida IS NOT NULL GROUP BY mes ORDER BY mes`, params),
@@ -58,8 +55,6 @@ const obtenerReporte = async (q) => {
                   GROUP BY con.id_conductor, con.nombre ORDER BY ingresos DESC`, params),
         db.query(`SELECT b.origen, b.destino, ${AGREGADOS}
                   FROM (${base}) b GROUP BY b.origen, b.destino ORDER BY viajes DESC, ingresos DESC`, params),
-        db.query(`SELECT COALESCE(b.estado, 'sin estado') AS estado, ${AGREGADOS}
-                  FROM (${base}) b GROUP BY b.estado ORDER BY viajes DESC`, params),
         db.query(`SELECT COALESCE(g.tipo_gasto, 'Sin tipo') AS tipo, COUNT(*) AS cantidad, SUM(g.monto) AS total
                   FROM gastos g JOIN (${base}) b ON b.id_viaje = g.fk_viaje
                   GROUP BY g.tipo_gasto ORDER BY total DESC`, params),
@@ -68,7 +63,7 @@ const obtenerReporte = async (q) => {
     const t = fila(totales[0] || {});
     const totalGastos = t.gastos;
     return {
-        filtros: { desde: q.desde || null, hasta: q.hasta || null, camion: q.camion || null, conductor: q.conductor || null, estado: q.estado || '' },
+        filtros: { desde: q.desde || null, hasta: q.hasta || null, camion: q.camion || null, conductor: q.conductor || null },
         resumen: {
             ...t,
             flete_promedio: t.viajes ? Math.round(t.ingresos / t.viajes) : 0,
@@ -79,7 +74,6 @@ const obtenerReporte = async (q) => {
         por_camion: porCamion.map(fila),
         por_conductor: porConductor.map(fila),
         por_ruta: porRuta.map(fila),
-        por_estado: porEstado.map(fila),
         gastos_por_tipo: gastosPorTipo.map(g => ({
             tipo: g.tipo, cantidad: num(g.cantidad), total: num(g.total),
             porcentaje: totalGastos > 0 ? Number(((num(g.total) / totalGastos) * 100).toFixed(1)) : 0

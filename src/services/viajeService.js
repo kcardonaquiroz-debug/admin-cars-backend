@@ -106,12 +106,12 @@ const actualizarViaje = async (id, v) => {
     const [result] = await db.execute(
         `UPDATE viajes SET fk_camion=?, fk_conductor=?, nro_guia=?,
          fecha_salida=?, fecha_llegada=?, producto_carga=?, toneladas=?,
-         origen=?, destino=?, valor_flete=?, estado=?
+         origen=?, destino=?, valor_flete=?
          WHERE id_viaje=?`,
         [v.fk_camion, v.fk_conductor, v.nro_guia,
          v.fecha_salida, v.fecha_llegada, v.producto_carga,
          normalizarToneladas(v.toneladas),
-         v.origen, v.destino, v.valor_flete, v.estado, id]
+         v.origen, v.destino, v.valor_flete, id]
     );
     return result;
 };

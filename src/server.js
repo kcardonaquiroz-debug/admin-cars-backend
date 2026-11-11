@@ -9,8 +9,9 @@ const PORT = process.env.PORT || 4000;
 // Aplica a la base de datos los cambios que falten (columnas y tablas nuevas).
 // Si se configuran SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD, crea el SuperAdmin cuando aún no hay ninguno.
 const migrar = async () => {
-    const conn = await pool.getConnection();
+    let conn;
     try {
+        conn = await pool.getConnection();
         await aplicarMigraciones(conn, {
             superadmin: { email: process.env.SUPERADMIN_EMAIL, password: process.env.SUPERADMIN_PASSWORD },
             soloSiNoHaySuperAdmin: true,
@@ -20,7 +21,7 @@ const migrar = async () => {
     } catch (error) {
         console.error('[migraciones] Error:', error.message);
     } finally {
-        conn.release();
+        if (conn) conn.release();
     }
 };
 
