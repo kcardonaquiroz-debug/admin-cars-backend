@@ -14,6 +14,14 @@ const getViajesReporte = async (req, res) => {
     catch (error) { responderError(res, error); }
 };
 
+const getDetalleViaje = async (req, res) => {
+    try {
+        const data = await reporteService.obtenerDetalleViaje(req.params.id);
+        if (!data) return res.status(404).json({ success: false, error: 'Viaje no encontrado', message: 'Viaje no encontrado' });
+        res.json({ success: true, data });
+    } catch (error) { responderError(res, error); }
+};
+
 const getDemo = async (req, res) => {
     try { res.json({ success: true, data: await demoService.contarDatosDemo() }); }
     catch (error) { responderError(res, error); }
@@ -29,4 +37,4 @@ const deleteDemo = async (req, res) => {
     catch (error) { responderError(res, error); }
 };
 
-module.exports = { getReporte, getViajesReporte, getDemo, postDemo, deleteDemo };
+module.exports = { getReporte, getViajesReporte, getDetalleViaje, getDemo, postDemo, deleteDemo };

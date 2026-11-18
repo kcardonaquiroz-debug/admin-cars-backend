@@ -78,7 +78,7 @@ const aplicarMigraciones = async (conn, { superadmin = null, soloSiNoHaySuperAdm
             estado TINYINT NOT NULL DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uq_tipos_gasto_nombre (nombre)
-        )`);
+        ) /*T![auto_id_cache] AUTO_ID_CACHE=1 */`);
 
     // gastos.tipo_gasto debe aceptar cualquier nombre del catálogo (por si era ENUM o muy corto)
     const [[colTipo]] = await conn.query(
@@ -146,8 +146,17 @@ const aplicarMigraciones = async (conn, { superadmin = null, soloSiNoHaySuperAdm
         }
     }
 
+    // Si no hay ningún SuperAdmin, se asciende al primer Administrador para que pueda gestionar usuarios
     if ((await contarSupers()) === 0) {
-        log('⚠ Aún no hay ningún SuperAdmin. Configura SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD en Render o ejecuta: npm run migrar -- correo clave');
+        const [[admin]] = await conn.query(
+            `SELECT u.id_usuario, u.email FROM usuarios u JOIN rol r ON r.id_rol = u.fk_rol
+             WHERE r.nombre = 'Administrador' ORDER BY u.id_usuario LIMIT 1`);
+        if (admin) {
+            await conn.query('UPDATE usuarios SET fk_rol = ? WHERE id_usuario = ?', [rolSuper.id_rol, admin.id_usuario]);
+            log(`✓ ${admin.email} (primer Administrador) ahora es SuperAdmin`);
+        } else {
+            log('⚠ Aún no hay ningún SuperAdmin ni Administrador. Configura SUPERADMIN_EMAIL y SUPERADMIN_PASSWORD en Render.');
+        }
     }
 };
 

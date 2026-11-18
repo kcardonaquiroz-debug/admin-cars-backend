@@ -6,6 +6,7 @@ const { verificarToken, noConductor, soloAdmin } = require("../middleware/authMi
 // Reportes (roles administrativos)
 router.get("/reportes", verificarToken, noConductor, r.getReporte);
 router.get("/reportes/viajes", verificarToken, noConductor, r.getViajesReporte);
+router.get("/reportes/viajes/:id", verificarToken, noConductor, r.getDetalleViaje);
 
 // Datos de prueba (Administrador / SuperAdmin)
 router.get("/reportes/demo", verificarToken, soloAdmin, r.getDemo);

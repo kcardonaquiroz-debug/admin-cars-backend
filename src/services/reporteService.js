@@ -99,4 +99,34 @@ const obtenerViajesReporte = async (q) => {
     }));
 };
 
-module.exports = { obtenerReporte, obtenerViajesReporte, construirFiltros };
+// Todo sobre un viaje: datos, camión, conductor, gastos y liquidación
+const obtenerDetalleViaje = async (id) => {
+    const [[viaje]] = await db.query(`
+        SELECT v.*, DATE_FORMAT(v.fecha_salida, '%Y-%m-%d') AS fecha_salida,
+               DATE_FORMAT(v.fecha_llegada, '%Y-%m-%d') AS fecha_llegada,
+               c.placa, c.marca, c.modelo, c.capacidad, c.foto_url,
+               con.nombre AS conductor, con.telefono AS telefono_conductor
+        FROM viajes v
+        LEFT JOIN camiones c ON c.id_camion = v.fk_camion
+        LEFT JOIN conductores con ON con.id_conductor = v.fk_conductor
+        WHERE v.id_viaje = ?`, [id]);
+    if (!viaje) return null;
+    const [gastos] = await db.query(
+        `SELECT id_gastos, tipo_gasto, categoria, monto FROM gastos WHERE fk_viaje = ? ORDER BY monto DESC`, [id]);
+    const [[liquidacion]] = await db.query(
+        `SELECT *, DATE_FORMAT(fecha_liquidacion, '%Y-%m-%d') AS fecha_liquidacion FROM liquidaciones WHERE fk_viaje = ?`, [id]);
+    const totalGastos = gastos.reduce((s, g) => s + num(g.monto), 0);
+    const flete = num(viaje.valor_flete);
+    return {
+        viaje: { ...viaje, toneladas: viaje.toneladas == null ? null : num(viaje.toneladas), valor_flete: flete },
+        gastos: gastos.map(g => ({ ...g, monto: num(g.monto) })),
+        liquidacion: liquidacion || null,
+        resumen: {
+            flete, total_gastos: totalGastos, utilidad: flete - totalGastos,
+            margen: margen(flete - totalGastos, flete),
+            flete_por_tonelada: num(viaje.toneladas) > 0 ? Math.round(flete / num(viaje.toneladas)) : 0,
+        },
+    };
+};
+
+module.exports = { obtenerReporte, obtenerViajesReporte, obtenerDetalleViaje, construirFiltros };
