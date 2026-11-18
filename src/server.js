@@ -41,7 +41,8 @@ const prepararBaseDatos = async () => {
         await aplicarEsquema(conn, log);
         await aplicarMigraciones(conn, {
             superadmin: { email: process.env.SUPERADMIN_EMAIL, password: process.env.SUPERADMIN_PASSWORD },
-            soloSiNoHaySuperAdmin: true,
+            // SUPERADMIN_RESET=si: vuelve a poner la contraseña de SUPERADMIN_EMAIL aunque ya exista un SuperAdmin
+            soloSiNoHaySuperAdmin: String(process.env.SUPERADMIN_RESET || '').toLowerCase() !== 'si',
             log,
         });
         log('Base de datos al día');
