@@ -108,6 +108,15 @@ const aplicarMigraciones = async (conn, { superadmin = null, soloSiNoHaySuperAdm
         log('✓ Columna usuarios.estado creada');
     }
 
+    // 4b. password_hash debe caber un hash bcrypt (60 caracteres); en la base original era más corta
+    const [[colClave]] = await conn.query(
+        `SELECT CHARACTER_MAXIMUM_LENGTH AS largo FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'password_hash'`);
+    if (colClave && colClave.largo !== null && Number(colClave.largo) < 255) {
+        await conn.query('ALTER TABLE usuarios MODIFY password_hash VARCHAR(255) NOT NULL');
+        log(`✓ usuarios.password_hash ampliado de ${colClave.largo} a 255 caracteres`);
+    }
+
     // 5. Rol SuperAdmin
     let [[rolSuper]] = await conn.query(`SELECT id_rol FROM rol WHERE nombre = 'SuperAdmin'`);
     if (!rolSuper) {
