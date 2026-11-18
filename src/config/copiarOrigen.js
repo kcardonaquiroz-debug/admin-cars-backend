@@ -61,6 +61,11 @@ const copiarDesdeOrigen = async (destino, log = console.log) => {
         connectTimeout: 20000,
     });
 
+    // Aiven usa sql_mode con ANSI_QUOTES: SHOW CREATE TABLE devolvería "tabla" en vez de `tabla`,
+    // y TiDB/MySQL estándar no lo aceptan. Se pide el formato estándar en esta sesión.
+    await origen.query(`SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'`);
+    await origen.query(`SET SESSION sql_quote_show_create = 1`);
+
     const creadas = [];
     try {
         const tablas = await ordenarPorDependencias(origen, (await tablasDe(origen)).filter(t => t !== MARCA));
